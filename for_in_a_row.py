@@ -37,18 +37,31 @@ class PlayingField():
 
     def record_a_move(self, player, position):
 
-        if player == 1:
-            color = (255, 0, 0)
-        else:
-            color = (0, 0, 255)
         y_poz_list = [11 * self.height / 12, 9 * self.height / 12, 7 * self.height / 12, 5 * self.height / 12, 3 * self.height / 12, self.height / 12]
         column_index = position[0] // 100
         row_index = len(self.playing_column[column_index])
         y_poz = y_poz_list[row_index]
         x_poz = column_index * 100 + self.width / 14
+
+        if player == 1:
+            color = (255, 0, 0)
+            x_moves.append((column_index, row_index))
+        else:
+            color = (0, 0, 255)
+            y_moves.append((column_index, row_index))
+
+
         pygame.draw.circle(self.screen, color, (x_poz, y_poz), (self.width / 14 - 4))
         self.playing_column[column_index].append('1')
         pygame.display.update()
+
+
+def is_the_game_over():
+    pass
+
+x_moves = []
+y_moves = []
+
 
 running = True
 
