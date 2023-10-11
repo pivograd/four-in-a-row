@@ -1,3 +1,5 @@
+from itertools import groupby
+
 import pygame
 
 class PlayingField():
@@ -46,6 +48,7 @@ class PlayingField():
         if player == 1:
             color = (255, 0, 0)
             x_moves.append((column_index, row_index))
+
         else:
             color = (0, 0, 255)
             y_moves.append((column_index, row_index))
@@ -55,9 +58,34 @@ class PlayingField():
         self.playing_column[column_index].append('1')
         pygame.display.update()
 
+def has_consecutive_sequence(list):
+    list.sort()
+    count = 0
+    for i in range(1, len(list)):
+        if list[i] == list[i - 1] + 1:
+            count += 1
+            if count == 3:
+                return True
+        else:
+            count = 0
+    return False
 
-def is_the_game_over():
-    pass
+def is_the_game_over(player):
+    result = {}
+    if player == 1:
+        x_moves.sort(key=lambda x: x[1])
+        for key, group in groupby(x_moves, key=lambda x: x[1]):
+            result[key] = list(group)
+    else:
+        y_moves.sort(key=lambda x: x[1])
+        for key, group in groupby(x_moves, key=lambda x: x[1]):
+            result[key] = list(group)
+    for row in result.values():
+        if len(row) >= 4:
+            first_elements = [x[0] for x in row]
+            res = has_consecutive_sequence(first_elements)
+            return res
+
 
 x_moves = []
 y_moves = []
@@ -81,3 +109,7 @@ while running:
         if event.type == pygame.MOUSEBUTTONUP:
             field.record_a_move(position = pygame.mouse.get_pos(), player = current_player)
             current_player, next_player = next_player, current_player
+
+        if is_the_game_over(current_player):
+            running = False
+
