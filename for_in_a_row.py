@@ -45,18 +45,21 @@ class PlayingField():
         y_poz = y_poz_list[row_index]
         x_poz = column_index * 100 + self.width / 14
 
-        if player == 1:
-            color = (255, 0, 0)
-            x_moves.append((column_index, row_index))
-
-        else:
-            color = (0, 0, 255)
-            y_moves.append((column_index, row_index))
+        player.list_of_moves.append((column_index, row_index))
 
 
-        pygame.draw.circle(self.screen, color, (x_poz, y_poz), (self.width / 14 - 4))
+        pygame.draw.circle(self.screen, player.color, (x_poz, y_poz), (self.width / 14 - 4))
         self.playing_column[column_index].append('1')
         pygame.display.update()
+
+class Player():
+
+    def __init__(self, color):
+
+        self.list_of_moves = []
+        self.color = color
+
+
 
 def has_consecutive_sequence(list):
     list.sort()
@@ -72,32 +75,40 @@ def has_consecutive_sequence(list):
 
 def is_the_game_over(player):
     result = {}
-    if player == 1:
-        x_moves.sort(key=lambda x: x[1])
-        for key, group in groupby(x_moves, key=lambda x: x[1]):
-            result[key] = list(group)
-    else:
-        y_moves.sort(key=lambda x: x[1])
-        for key, group in groupby(x_moves, key=lambda x: x[1]):
-            result[key] = list(group)
+    player.list_of_moves.sort(key=lambda x: x[1])
+    for key, group in groupby(player.list_of_moves, key=lambda x: x[1]):
+        result[key] = list(group)
+
     for row in result.values():
         if len(row) >= 4:
             first_elements = [x[0] for x in row]
             res = has_consecutive_sequence(first_elements)
-            return res
+            if res:
+                return res
 
+    player.list_of_moves.sort()
+    for key, group in groupby(player.list_of_moves, key=lambda x: x[0]):
+        result[key] = list(group)
 
-x_moves = []
-y_moves = []
+    for row in result.values():
+        if len(row) >= 4:
+            first_elements = [x[1] for x in row]
+            res = has_consecutive_sequence(first_elements)
+            if res:
+                return res
 
 
 running = True
 
-current_player = 1
-next_player = 0
 
 field = PlayingField()
 field.to_create()
+
+player_1 = Player(color= (255, 0, 0))
+player_2 = Player(color= (0, 0, 255))
+
+current_player = player_1
+next_player = player_2
 
 while running:
 
@@ -110,6 +121,6 @@ while running:
             field.record_a_move(position = pygame.mouse.get_pos(), player = current_player)
             current_player, next_player = next_player, current_player
 
-        if is_the_game_over(current_player):
+        if is_the_game_over(next_player):
             running = False
 
