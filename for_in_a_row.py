@@ -46,6 +46,7 @@ class PlayingField():
         x_poz = column_index * 100 + self.width / 14
 
         player.list_of_moves.append((column_index, row_index))
+        player.last_move = (column_index, row_index)
 
 
         pygame.draw.circle(self.screen, player.color, (x_poz, y_poz), (self.width / 14 - 4))
@@ -58,7 +59,7 @@ class Player():
 
         self.list_of_moves = []
         self.color = color
-
+        self.last_move = (0, 0)
 
 
 def has_consecutive_sequence(list):
@@ -73,29 +74,45 @@ def has_consecutive_sequence(list):
             count = 0
     return False
 
-def is_the_game_over(player):
+def group_and_check(player, key_func, extract_func):
+    player.list_of_moves.sort(key=key_func)
     result = {}
-    player.list_of_moves.sort(key=lambda x: x[1])
-    for key, group in groupby(player.list_of_moves, key=lambda x: x[1]):
+    for key, group in groupby(player.list_of_moves, key=key_func):
         result[key] = list(group)
 
     for row in result.values():
         if len(row) >= 4:
-            first_elements = [x[0] for x in row]
-            res = has_consecutive_sequence(first_elements)
-            if res:
-                return res
+            values = [extract_func(x) for x in row]
+            if has_consecutive_sequence(values):
+                return True
 
-    player.list_of_moves.sort()
-    for key, group in groupby(player.list_of_moves, key=lambda x: x[0]):
-        result[key] = list(group)
+def is_the_game_over(player):
+    if group_and_check(player, lambda x: x[1], lambda x: x[0]):
+        return True
+    if group_and_check(player, lambda x: x[0], lambda x: x[1]):
+        return True
+    if checking_the_victory_diagonally(player.last_move, player.list_of_moves):
+        return True
+    return False
 
-    for row in result.values():
-        if len(row) >= 4:
-            first_elements = [x[1] for x in row]
-            res = has_consecutive_sequence(first_elements)
-            if res:
-                return res
+def checking_the_victory_diagonally(move, moves):
+    def check_adjacent_move(deltas_list):
+        counter = 1
+        for dx, dy in deltas_list:
+            x, y = move
+            for _ in range(3):
+                x, y = x + dx, y + dy
+                if (x, y) in moves:
+                    counter += 1
+                else:
+                    break
+        if counter >= 4:
+            return True
+
+    if check_adjacent_move(deltas_list=[(1, 1), (-1, -1)]):
+        return True
+    elif check_adjacent_move(deltas_list=[(1, -1), (-1, 1)]):
+        return True
 
 
 running = True
