@@ -5,16 +5,23 @@ import pygame
 class PlayingField():
 
     def __init__(self):
-        pass
+        pygame.init()
+        pygame.display.set_caption('ЧЕТЫРЕ В РЯД')
+
 
     def set_settings(self):
 
         self.width = 700
         self.height = 700
         self.colour = (0, 255, 0)
-        self.screen = pygame.display.set_mode((self.width, self.height))
+        self.screen = pygame.display.set_mode((self.width, self.height + 100))
         self.playing_column = [[],[],[],[],[],[],[]]
-        pygame.display.set_caption('ЧЕТЫРЕ В РЯД')
+        self.font = pygame.font.SysFont(name='Arial', size=110)
+
+
+
+
+
 
     def draw_a_field(self):
 
@@ -30,6 +37,24 @@ class PlayingField():
                 x += self.width / 7
             x = self.width / 14
             y += self.height / 6
+        self.new_game_button()
+
+    def new_game_button(self):
+
+        button_rectangle = pygame.Rect(0, self.height, self.width, 100)
+        pygame.draw.rect(self.screen, (0, 114, 0), button_rectangle)
+        pygame.draw.line(surface=self.screen, color=(0, 0, 0), start_pos=(0, self.height),
+                         end_pos=(self.width, self.height), width=3)
+        text = self.font.render("Новая игра", True, (129, 255, 173))
+        text_rect = text.get_rect(center=button_rectangle.center)
+        self.screen.blit(text, text_rect)
+
+    def display_message(self, message):
+
+        text_surface = self.font.render(message, True, (255, 0, 0))
+        text_rect = text_surface.get_rect()
+        text_rect.center = (self.width // 2, self.height // 3)
+        self.screen.blit(text_surface, text_rect)
 
     def to_create(self):
 
@@ -61,6 +86,13 @@ class Player():
         self.color = color
         self.last_move = (0, 0)
 
+    def new_game(self):
+
+        self.list_of_moves = []
+        self.last_move = (0, 0)
+
+    def __str__(self):
+        return f"{self.color}"
 
 def has_consecutive_sequence(list):
     list.sort()
@@ -135,9 +167,15 @@ while running:
             running = False
 
         if event.type == pygame.MOUSEBUTTONUP:
-            field.record_a_move(position = pygame.mouse.get_pos(), player = current_player)
-            current_player, next_player = next_player, current_player
+            pos = pygame.mouse.get_pos()
+            if pos[1] >= field.height:
+                field.to_create()
+                next_player.new_game()
+                current_player.new_game()
+            else:
+                field.record_a_move(position = pos, player = current_player)
 
-        if is_the_game_over(next_player):
-            running = False
+            if is_the_game_over(current_player):
+                running=False
+            current_player, next_player = next_player, current_player
 
