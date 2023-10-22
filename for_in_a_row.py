@@ -1,4 +1,5 @@
 from itertools import groupby
+from random import randint
 
 import pygame
 
@@ -8,19 +9,43 @@ class PlayingField():
         pygame.init()
         pygame.display.set_caption('ЧЕТЫРЕ В РЯД')
 
+    class Player():
+
+        def __init__(self, color):
+            self.list_of_moves = []
+            self.color = color
+            self.last_move = (0, 0)
+
+        def new_game(self):
+            self.list_of_moves = []
+            self.last_move = (0, 0)
+
+        def __str__(self):
+            return f"{self.color}"
+
+    class ComputerPlayer(Player):
+
+        def get_random_move(self):
+            y = randint(0, 700)
+            return (y, 100)
 
     def set_settings(self):
 
+        self.stop_record = False
         self.width = 700
         self.height = 700
-        self.colour = (0, 255, 0)
+        self.colour = (137, 112, 74)
         self.screen = pygame.display.set_mode((self.width, self.height + 100))
         self.playing_column = [[],[],[],[],[],[],[]]
         self.font = pygame.font.SysFont(name='Arial', size=110)
+        self.current_player = self.Player(color= (255, 0, 0))
+        self.next_player = self.ComputerPlayer(color=(0, 0, 255))
+        self.game_mod = 2
 
 
+    def swap_players(self):
 
-
+        self.current_player, self.next_player = self.next_player, self.current_player
 
 
     def draw_a_field(self):
@@ -49,17 +74,20 @@ class PlayingField():
         text_rect = text.get_rect(center=button_rectangle.center)
         self.screen.blit(text, text_rect)
 
-    def display_message(self, message):
+    def display_message(self, message, color):
 
-        text_surface = self.font.render(message, True, (255, 0, 0))
+        text_surface = self.font.render(message, True, color)
         text_rect = text_surface.get_rect()
-        text_rect.center = (self.width // 2, self.height // 3)
+        text_rect.center = (self.width // 2, self.height // 5)
         self.screen.blit(text_surface, text_rect)
+        pygame.display.update()
 
     def to_create(self):
 
         self.set_settings()
         self.draw_a_field()
+        self.current_player.new_game()
+        self.next_player.new_game()
         pygame.display.update()
 
     def record_a_move(self, player, position):
@@ -78,21 +106,18 @@ class PlayingField():
         self.playing_column[column_index].append('1')
         pygame.display.update()
 
-class Player():
+    def game_vs_ai(self):
 
-    def __init__(self, color):
+        self.game_mod = 1
+        self.current_player = self.Player(color=(255, 0, 0))
+        self.next_player = self.ComputerPlayer(color=(0, 0, 255))
 
-        self.list_of_moves = []
-        self.color = color
-        self.last_move = (0, 0)
+    def two_people_game(self):
 
-    def new_game(self):
+        self.game_mod = 2
+        self.current_player = self.Player(color=(255, 0, 0))
+        self.next_player = self.Player(color=(0, 0, 255))
 
-        self.list_of_moves = []
-        self.last_move = (0, 0)
-
-    def __str__(self):
-        return f"{self.color}"
 
 def has_consecutive_sequence(list):
     list.sort()
@@ -149,15 +174,8 @@ def checking_the_victory_diagonally(move, moves):
 
 running = True
 
-
 field = PlayingField()
 field.to_create()
-
-player_1 = Player(color= (255, 0, 0))
-player_2 = Player(color= (0, 0, 255))
-
-current_player = player_1
-next_player = player_2
 
 while running:
 
@@ -170,12 +188,29 @@ while running:
             pos = pygame.mouse.get_pos()
             if pos[1] >= field.height:
                 field.to_create()
-                next_player.new_game()
-                current_player.new_game()
             else:
-                field.record_a_move(position = pos, player = current_player)
+                if not field.stop_record:
+                    try:
+                        field.record_a_move(position = pos, player = field.current_player)
+                        if is_the_game_over(field.current_player):
+                            field.stop_record = True
+                            field.display_message(f'Победа', field.current_player.color)
+                    except:
+                        break
 
-            if is_the_game_over(current_player):
-                running=False
-            current_player, next_player = next_player, current_player
+                if not field.stop_record:
 
+                    if field.game_mod == 1:
+                        field.swap_players()
+                    elif field.game_mod == 2:
+                        not_move = True
+                        while not_move:
+                            pos = field.next_player.get_random_move()
+                            try:
+                                field.record_a_move(position = pos, player = field.next_player)
+                                not_move = False
+                                if is_the_game_over(field.next_player):
+                                    field.stop_record = True
+                                    field.display_message(f'Победа', field.next_player.color)
+                            except:
+                                pass
