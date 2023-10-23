@@ -8,6 +8,9 @@ class PlayingField():
     def __init__(self):
         pygame.init()
         pygame.display.set_caption('ЧЕТЫРЕ В РЯД')
+        self.current_player = self.Player(color= (255, 0, 0))
+        self.next_player = self.Player(color=(0, 0, 255))
+        self.game_mod = 2
 
     class Player():
 
@@ -35,12 +38,11 @@ class PlayingField():
         self.width = 700
         self.height = 700
         self.colour = (137, 112, 74)
-        self.screen = pygame.display.set_mode((self.width, self.height + 100))
+        self.screen = pygame.display.set_mode((self.width, self.height + 200))
         self.playing_column = [[],[],[],[],[],[],[]]
         self.font = pygame.font.SysFont(name='Arial', size=110)
-        self.current_player = self.Player(color= (255, 0, 0))
-        self.next_player = self.ComputerPlayer(color=(0, 0, 255))
-        self.game_mod = 2
+        self.font_2 = pygame.font.SysFont(name='Arial', size=55)
+
 
 
     def swap_players(self):
@@ -63,6 +65,7 @@ class PlayingField():
             x = self.width / 14
             y += self.height / 6
         self.new_game_button()
+        self.game_mod_buttons(self.game_mod)
 
     def new_game_button(self):
 
@@ -73,6 +76,33 @@ class PlayingField():
         text = self.font.render("Новая игра", True, (129, 255, 173))
         text_rect = text.get_rect(center=button_rectangle.center)
         self.screen.blit(text, text_rect)
+
+    def game_mod_buttons(self, current_game_mod):
+
+        if current_game_mod == 1:
+            color_1 = (0, 104, 0)
+            color_2 = (0, 156, 0)
+        elif current_game_mod == 2:
+            color_1 = (0, 156, 0)
+            color_2 = (0, 104, 0)
+
+        button_rectangle_1 = pygame.Rect(0, self.height + 100, self.width/2, 100)
+        button_rectangle_2 = pygame.Rect(self.width/2, self.height + 100, self.width/2, 100)
+        pygame.draw.rect(self.screen, color_1, button_rectangle_1)
+        pygame.draw.rect(self.screen, color_2, button_rectangle_2)
+        pygame.draw.line(surface=self.screen, color=(0, 0, 0), start_pos=(0, self.height+100),
+                         end_pos=(self.width, self.height+100), width=3)
+
+        pygame.draw.line(surface=self.screen, color=(0, 0, 0), start_pos=(self.width/2, self.height+100),
+                         end_pos=(self.width/2, self.height+200), width=3)
+        text = self.font_2.render("Игра для 2", True, (129, 255, 173))
+        text_rect = text.get_rect(center=button_rectangle_1.center)
+        self.screen.blit(text, text_rect)
+        text = self.font_2.render("Игра для 1", True, (129, 255, 173))
+        text_rect = text.get_rect(center=button_rectangle_2.center)
+        self.screen.blit(text, text_rect)
+
+
 
     def display_message(self, message, color):
 
@@ -186,8 +216,23 @@ while running:
 
         if event.type == pygame.MOUSEBUTTONUP:
             pos = pygame.mouse.get_pos()
-            if pos[1] >= field.height:
+            if field.height <= pos[1] <= field.height + 100:
                 field.to_create()
+
+            elif field.height + 100 <= pos[1] <=field.height+203:
+                if pos[0] >= field.width/2:
+                    if field.game_mod == 1:
+                        pass
+                    else:
+                        field.game_vs_ai()
+                        field.to_create()
+
+                elif pos[0] <= field.width/2:
+                    if field.game_mod == 2:
+                        pass
+                    else:
+                        field.two_people_game()
+                        field.to_create()
             else:
                 if not field.stop_record:
                     try:
@@ -200,9 +245,9 @@ while running:
 
                 if not field.stop_record:
 
-                    if field.game_mod == 1:
+                    if field.game_mod == 2:
                         field.swap_players()
-                    elif field.game_mod == 2:
+                    elif field.game_mod == 1:
                         not_move = True
                         while not_move:
                             pos = field.next_player.get_random_move()
